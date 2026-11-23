@@ -33,14 +33,19 @@
  *   swap: true              # tap opens and a power button toggles (default false)
  *   tap_action: {...}       # replaces the toggle
  *   hold_action: {...}      # replaces the long press (default: what the right button does)
- *   icon: mdi:sofa          # shown left of the name; none unless set (the bar shows the state)
- *   on_color: amber         # state bar colour when on: a theme colour name or any CSS colour
+ *   indicator: icon         # what shows the state (default icon):
+ *                           #   icon: the icon in a circle, coloured when on, like the tile card
+ *                           #   bar:  a bar down the left edge; icons stay grey and are optional
+ *   icon: mdi:sofa          # the icon; default the first entity's own, which follows its state
+ *   show_icon: true         # with indicator: bar, show the icon (default only if icon is set)
+ *   on_color: amber         # colour when on: a theme colour name or any CSS colour (default
+ *                           # the theme's active colour for the first entity's domain)
  *
  * Entities can be lights, switches, fans, input booleans or groups of them. A tile counts as
  * on when any of its entities is "on"; groups are expanded for the "2 of 3 on" count.
  */
 
-const VERSION = "1.0.0";
+const VERSION = "1.1.0";
 const TYPE = "split-tile-card";
 const HOLD_MS = 500;
 const MOVE_PX = 10; // a pointer that moves further than this is a drag, not a tap
@@ -81,6 +86,7 @@ class SplitTileCard extends HTMLElement {
       brightness_pct: config.navigation_path ? 100 : null,
       swap: false,
       ...config,
+      indicator: config.indicator === "bar" ? "bar" : "icon",
       entities,
     };
     this._built = false;
@@ -164,7 +170,7 @@ class SplitTileCard extends HTMLElement {
           display: flex;
           align-items: stretch;
           overflow: hidden;
-          --on: var(--split-tile-on-color, var(--state-light-active-color, #ffc107));
+          --on: var(--split-tile-on-color, var(--split-tile-domain-color, #ffc107));
         }
         .main, .go {
           cursor: pointer;
@@ -199,6 +205,26 @@ class SplitTileCard extends HTMLElement {
           --mdc-icon-size: 24px;
           color: var(--secondary-text-color);
         }
+        /* indicator: icon -- no bar; the icon sits in a circle and takes the colour when on */
+        :host([indicator="icon"]) .bar { display: none; }
+        :host([indicator="icon"]) .main { padding-inline-start: 8px; }
+        :host([indicator="icon"]) .icon {
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          --mdc-icon-size: 22px;
+          color: var(--state-inactive-color, var(--secondary-text-color));
+          background: rgba(127, 127, 127, 0.15);
+          transition: color 0.2s, background 0.2s;
+        }
+        :host([indicator="icon"][state="on"]) .icon {
+          color: var(--on);
+          background: color-mix(in srgb, var(--on) 20%, transparent);
+        }
+        :host([indicator="icon"][state="unknown"]) .icon { opacity: 0.5; }
         .text { min-width: 0; display: flex; flex-direction: column; }
         .name, .info {
           white-space: nowrap;
@@ -244,7 +270,7 @@ class SplitTileCard extends HTMLElement {
       <ha-card>
         <div class="main" role="button" tabindex="0">
           <div class="bar"></div>
-          <ha-icon class="icon"></ha-icon>
+          <ha-state-icon class="icon"></ha-state-icon>
           <div class="text">
             <span class="name"></span>
             <span class="info"></span>
@@ -330,6 +356,13 @@ class SplitTileCard extends HTMLElement {
     });
     const on = this._anyOn();
     this.setAttribute("state", !known ? "unknown" : on ? "on" : "off");
+    this.setAttribute("indicator", c.indicator);
+    // the theme's active colour for the first entity's domain, as the tile card uses
+    const domain = c.entities[0].split(".")[0];
+    e.card.style.setProperty(
+      "--split-tile-domain-color",
+      `var(--state-${domain}-active-color, var(--state-active-color, #ffc107))`
+    );
     if (c.on_color)
       e.card.style.setProperty(
         "--split-tile-on-color",
@@ -338,8 +371,15 @@ class SplitTileCard extends HTMLElement {
     else e.card.style.removeProperty("--split-tile-on-color");
 
     e.name.textContent = c.name || (first && first.attributes.friendly_name) || c.entities[0];
-    if (c.icon) e.icon.setAttribute("icon", c.icon);
-    e.icon.style.display = c.icon ? "" : "none";
+    // a set icon, or the entity's own (ha-state-icon follows its state). With the icon as the
+    // indicator it always shows; with the bar it is grey and shows only when asked for.
+    const showIcon = c.indicator === "icon" || !!(c.icon || c.show_icon);
+    e.icon.style.display = showIcon ? "" : "none";
+    if (showIcon) {
+      e.icon.hass = hass;
+      e.icon.stateObj = first;
+      e.icon.icon = c.icon || undefined;
+    }
 
     // the right-hand button: a chevron that opens, or with swap a power button that toggles
     const opens = c.popup ? STRINGS.open : c.navigation_path ? STRINGS.openView : STRINGS.details;
@@ -564,6 +604,7 @@ class SplitTileCardEditor extends HTMLElement {
   }
 
   _schema() {
+    const bar = this._config.indicator === "bar";
     const schema = [
       { name: "name", selector: { text: {} } },
       {
@@ -576,8 +617,21 @@ class SplitTileCardEditor extends HTMLElement {
         type: "grid",
         name: "",
         schema: [
-          { name: "icon", selector: { icon: {} } },
+          {
+            name: "indicator",
+            selector: {
+              select: {
+                mode: "dropdown",
+                options: [
+                  { value: "icon", label: "Icon" },
+                  { value: "bar", label: "Bar down the left edge" },
+                ],
+              },
+            },
+          },
           { name: "on_color", selector: { ui_color: {} } },
+          { name: "icon", selector: { icon: {} } },
+          ...(bar ? [{ name: "show_icon", selector: { boolean: {} } }] : []),
           {
             name: "brightness_pct",
             selector: { number: { min: 1, max: 100, mode: "box", unit_of_measurement: "%" } },
@@ -613,8 +667,10 @@ class SplitTileCardEditor extends HTMLElement {
         name: "Name",
         entities: "Entities",
         navigation_path: "View to open (makes it a room tile)",
-        icon: "Icon (none by default)",
-        on_color: "Bar colour when on",
+        icon: "Icon (default: the entity's)",
+        show_icon: "Show the icon",
+        indicator: "State shown by",
+        on_color: "Colour when on",
         brightness_pct: view ? "Turn-on brightness (default 100%)" : "Turn-on brightness (default: last)",
         swap: "Swap: tap opens, power button toggles",
         title: "Pop-up title (default: the name)",
@@ -636,7 +692,11 @@ class SplitTileCardEditor extends HTMLElement {
     this._form.hass = this._hass;
     this._form.schema = this._schema();
     // the form always edits a list; the card takes entity or entities
-    this._form.data = { ...c, entities: c.entity != null || c.entities != null ? entityIds(c) : [] };
+    this._form.data = {
+      ...c,
+      indicator: c.indicator === "bar" ? "bar" : "icon",
+      entities: c.entity != null || c.entities != null ? entityIds(c) : [],
+    };
   }
 
   _changed(value) {
@@ -652,6 +712,8 @@ class SplitTileCardEditor extends HTMLElement {
       if (out[k] === "" || out[k] === undefined || out[k] === null) delete out[k];
     }
     if (out.swap === false) delete out.swap;
+    if (out.show_icon === false || out.indicator !== "bar") delete out.show_icon;
+    if (out.indicator !== "bar") delete out.indicator; // icon is the default
     // brightness_pct: null on a room tile means "the last level"; the form can't show it
     if (before.brightness_pct === null && !("brightness_pct" in out)) out.brightness_pct = null;
     // keep the pop-up's cards, which the form doesn't show

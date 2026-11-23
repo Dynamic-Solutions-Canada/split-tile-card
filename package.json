@@ -1,6 +1,6 @@
 {
   "name": "split-tile-card",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "description": "A Home Assistant dashboard tile split in two: tap toggles, the chevron opens a view, a dialog or a pop-up of cards.",
   "license": "MIT",

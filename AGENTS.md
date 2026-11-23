@@ -19,6 +19,7 @@ This repo follows the shared standards at https://github.com/Dynamic-Solutions-C
 
 ## Behaviour
 
+- Two state indicators, set by `indicator` and reflected on the host as the `indicator` attribute: `icon` (the default, what most users expect from Home Assistant tiles: the icon in a circle, coloured when on) and `bar` (a bar down the left edge, grey optional icons). Both are supported long term; style changes must keep both working.
 - A tile counts as on when any configured entity's state is `on`. The editor offers only the domains in `DOMAINS`, because other domains (covers, media players) never read as on.
 - Room tiles (with `navigation_path`) turn lights on at `brightness_pct` 100 by default; other tiles turn them on with no brightness, so they come back at their last level. `brightness_pct: null` keeps the last level on a room tile, and the editor preserves it.
 - The pop-up is appended to `document.body` so no layout clips it. Events its cards fire are re-dispatched from the card (`FORWARDED`), because Home Assistant only listens inside its own tree. A card event added to Home Assistant later may need adding there.
@@ -55,4 +56,4 @@ Bump `version` in `package.json` and `VERSION` in the card, write `release-notes
 | --- | --- |
 | An option, a default or a supported domain | The configuration table and examples in `README.md`, and the header comment in `split-tile-card.js` |
 | The minimum Home Assistant version | `hacs.json` and `## Requirements` in `README.md` |
-| How the tile looks | `store-assets/web/screenshots/tiles.png` |
+| How the tile looks | Both README screenshots in `store-assets/web/screenshots/`: `tiles.png` (icon indicator) and `tiles-bar.png` (bar) |

@@ -4,11 +4,13 @@ A dashboard tile split in two: tap it to turn a room's lights on or off, and tap
 
 ![Split tiles on a Home Assistant dashboard: rooms showing how many lights are on, single lights showing their brightness, a pop-up tile and a tile with a power button](store-assets/web/screenshots/tiles.png)
 
+![The same kind of tiles with a bar down the left edge in place of icons](store-assets/web/screenshots/tiles-bar.png)
+
 - **Two actions per tile:** the large part toggles, and the chevron opens more, so a whole room is one tap to switch and one tap to explore.
 - **Room tiles:** show how many lights are on, such as "2 of 3 on", turn the room on at full brightness and open the room's own view.
 - **Light tiles:** show the brightness, bring the light back at its last level and open the more-info dialog with its slider.
 - **Pop-up tiles:** open a pop-up holding any other cards, such as the scripts behind a group of switches.
-- **A state bar, not an icon:** a coloured bar down the left edge shows on, off and unavailable, so tiles stay compact and need no icons.
+- **Your choice of state indicator:** the entity's icon lights up in the theme's colour like Home Assistant's own tiles, or a slim bar down the left edge shows the state for a cleaner, icon-free look.
 - **Swap mode:** put opening on the tap and a power button on the right, if you open more often than you switch.
 - **Visual editor:** set everything from the dashboard editor except the pop-up's cards.
 
@@ -44,8 +46,10 @@ Edit a dashboard, add a card and pick **Split Tile Card**, then choose its entit
 | `popup` | none | `title` and `cards` for a pop-up the chevron opens instead. |
 | `brightness_pct` | 100 on room tiles, otherwise the last level | Brightness lights turn on at. Set `null` on a room tile to keep each light's last level. |
 | `swap` | `false` | Tap opens, and a power button on the right toggles. |
-| `icon` | none | An icon left of the name. |
-| `on_color` | the theme's light colour | The bar colour when on: a theme colour name such as `amber`, or any CSS colour. |
+| `indicator` | `icon` | What shows the state. `icon`: the icon sits in a circle and takes the colour when on. `bar`: a bar down the left edge, with grey icons shown only when asked for. |
+| `icon` | the first entity's icon | The icon left of the name. The entity's own icon changes with its state. |
+| `show_icon` | `false` | With `indicator: bar`, show the icon. A set `icon` always shows. |
+| `on_color` | the theme's colour for the entity's domain | The colour when on: a theme colour name such as `amber`, or any CSS colour. |
 | `tap_action` | toggle | A standard action that replaces the toggle. |
 | `hold_action` | what the chevron does | A standard action for a long press on the tile. |
 

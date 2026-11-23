@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate
+    runs-on: ubuntu-latest
+    # A syntax and version check with no dependencies; the cap only stops a hung run.
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node from .nvmrc
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+
+      - name: Run the gate
+        run: npm run validate
+
+  hacs:
+    name: HACS
+    runs-on: ubuntu-latest
+    # HACS's own checks of the repo layout, hacs.json and README, as the default store runs them.
+    timeout-minutes: 10
+    steps:
+      - name: Validate for HACS
+        uses: hacs/action@22.5.0
+        with:
+          category: plugin

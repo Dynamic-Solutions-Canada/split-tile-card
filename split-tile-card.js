@@ -45,7 +45,7 @@
  * on when any of its entities is "on"; groups are expanded for the "2 of 3 on" count.
  */
 
-const VERSION = "1.1.0";
+const VERSION = "1.1.1";
 const TYPE = "split-tile-card";
 const HOLD_MS = 500;
 const MOVE_PX = 10; // a pointer that moves further than this is a drag, not a tap

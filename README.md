@@ -22,9 +22,12 @@ Home Assistant 2024.11 or later. The tile is sized for the sections dashboard la
 
 ### HACS (recommended)
 
-1. In HACS, open the menu and choose **Custom repositories**.
-2. Add `https://github.com/Dynamic-Solutions-Canada/split-tile-card` with the type **Dashboard**.
-3. Search HACS for **Split Tile Card**, install it and reload your browser.
+Split Tile Card is in the HACS default store.
+
+[![Open your Home Assistant instance and open this repository in HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Dynamic-Solutions-Canada&repository=split-tile-card&category=plugin)
+
+1. Use the button above, or search HACS for **Split Tile Card**.
+2. Download it and reload your browser.
 
 ### Manual
 
